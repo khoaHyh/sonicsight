@@ -1,0 +1,7 @@
+{
+  "reportMissingImports": false,
+  "reportUnknownMemberType": "none",
+  "reportUnknownVariableType": "none",
+  "reportWildcardImportFromLibrary": "none",
+  "reportGeneralTypeIssues": "none"
+}
