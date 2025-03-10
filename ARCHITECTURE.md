@@ -1,4 +1,4 @@
-This document is a brainstorm 🧠⛈️ on system design and the systematic approach to implementing this project. Not to be confused with "ML architecture" which is used a synonym to describe the template or structure of the **model**.
+This document is a brainstorm 🧠⛈️ on system design and the systematic approach to implementing this project. Not to be confused with "ML architecture" which is sometimes used as a synonym to describe the template or structure of the **model**.
 
 ## TODOs
 
