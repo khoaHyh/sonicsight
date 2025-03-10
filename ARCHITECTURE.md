@@ -9,7 +9,7 @@ This document is a brainstorm 🧠⛈️ on system design and the systematic app
 
 ## Roadmap
 
-1. Data Collection and Project Components
+### 1. Data Collection and Project Components
 
 - Decide on a data set. Going to pick 1 of:
   - UrbanSound8K
@@ -19,7 +19,7 @@ This document is a brainstorm 🧠⛈️ on system design and the systematic app
   - Librosa
 - Decide on spectrogram parameters (FFT size, window type, hop length)
 
-2. Model Selection and Training
+### 2. Model Selection and Training:
 
 This section will be applying a lot of the content in lessons 1 & 2 of "Practical Deep Learning for Coders". Training & testing model on Kaggle.
 
@@ -29,7 +29,7 @@ This section will be applying a lot of the content in lessons 1 & 2 of "Practica
 - Fine-tune on spectrograms with appropriate labels
 - Evaluate performance on validation set
 
-3. Prototype Development
+### 3. Prototype Development
 
 I'll use Hugging Face spaces to do POC for myself and full stack deployment later. The goal here is to get a sense of how our app looks when it's all put together.
 
@@ -37,7 +37,7 @@ a. Create a simple prototype to process a single audio file to a spectrogram
 b. Export model from Kaggle to use on Hugging Face
 c. Use the model and classify the spectrogram
 
-4. Iterate on Prototype
+### 4. Iterate on Prototype
 
 - Use the FastHTML web framework to create the frontend
 - Processing pipeline:
@@ -47,11 +47,11 @@ c. Use the model and classify the spectrogram
   - display results
 - Error handling and user feedback
 
-5. UI/UX Refinement
+### 5. UI/UX Refinement:
 
 - Opportunity here to be educational and digitally appealing
 
-6. Testing and Deployment
+### 6. Testing and Deployment
 
 - Can we have automated tests?
   - have to explore edge cases and various audio samples
