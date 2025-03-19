@@ -33,9 +33,9 @@ This section will be applying a lot of the content in lessons 1 & 2 of "Practica
 
 I'll use Hugging Face spaces to do POC for myself and full stack deployment later. The goal here is to get a sense of how our app looks when it's all put together.
 
-a. Create a simple prototype to process a single audio file to a spectrogram
-b. Export model from Kaggle to use on Hugging Face
-c. Use the model and classify the spectrogram
+- Create a simple prototype to process a single audio file to a spectrogram
+- Export model from Kaggle to use on Hugging Face
+- Use the model and classify the spectrogram
 
 ### 4. Iterate on Prototype
 
