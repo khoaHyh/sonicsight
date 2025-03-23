@@ -1,0 +1,4 @@
+python-fasthtml>=0.12.4
+gradio-client>=1.8.0
+python-dotenv>=1.0.1
+pillow>=11.1.0
