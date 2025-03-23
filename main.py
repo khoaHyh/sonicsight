@@ -15,12 +15,29 @@ hf_token = os.getenv("HF_TOKEN")
 app, rt = fast_app()
 
 
+@dataclass
+class AudioAnalysisResult:
+    spectrogram: str
+    prediction: str
+    confidence: float
+    error: str | None
+
+    def __ft__(self):
+        if self.error is not None:
+            return Div(self.error)
+
+        return Div(
+            Div(H4("Spectrogram:"), Img(src=self.spectrogram)),
+            Div(P(f"{self.prediction}"), P(f"{self.confidence}")),
+            Script("document.getElementById('results-content').style.display = 'block';"),
+        )
+
+
 def create_ui():
     return Div(
         create_upload_form(),
         create_preview_section(),
         create_results_section(),
-        create_action_buttons(),
         id="upload-container",
     )
 
@@ -30,6 +47,10 @@ def create_upload_form():
         H3("Upload an Audio File", id="upload-audio-title"),
         P("Select a .wav or .mp3 file to classify. You can play it before processing."),
         Input(type="file", id="audio-file", name="audio", accept="audio/*"),
+        Button("Analyze Audio", id="analyze-btn", type="submit"),
+        hx_post="/analyze",
+        hx_target="#results-content",
+        hex_encoding="multipart/form-data",
         cls="audio-form",
     )
 
@@ -49,107 +70,6 @@ def create_results_section():
         Div(id="results-content", style="display:none;"),
         cls="results-container",
     )
-
-
-def create_action_buttons():
-    return Div(Button("Analyze Audio", id="analyze-btn", disabled=True), cls="button-container")
-
-
-def create_client_scripts():
-    return Script("""
-    // Get DOM elements
-    const audioFile = document.getElementById('audio-file');
-    const audioPreview = document.getElementById('audio-preview');
-    const noAudio = document.getElementById('no-audio');
-    const analyzeBtn = document.getElementById('analyze-btn');
-    const resultsContent = document.getElementById('results-content');
-    
-    // Handle file selection
-    audioFile.addEventListener('change', function(e) {
-        if (this.files && this.files.length === 1) {
-            const file = this.files[0];
-            
-            // Create audio element for preview
-            audioPreview.innerHTML = '';
-            const audio = document.createElement('audio');
-            audio.controls = true;
-            audio.src = URL.createObjectURL(file);
-            audioPreview.appendChild(audio);
-            
-            // Show audio preview and enable analyze button
-            audioPreview.style.display = 'block';
-            noAudio.style.display = 'none';
-            analyzeBtn.disabled = false;
-            
-            // Add file info
-            const fileInfo = document.createElement('p');
-            fileInfo.textContent = `File: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-            audioPreview.appendChild(fileInfo);
-            
-            // Hide previous results
-            resultsContent.style.display = 'none';
-        }
-    });
-    
-    // Handle analyze button click
-    analyzeBtn.addEventListener('click', async function(event) {
-        // Prevent default form submission which might trigger file dialog
-        event.preventDefault();
-        
-        if (!audioFile.files || !audioFile.files[0]) {
-            alert('Please select an audio file first');
-            return;
-        }
-        
-        // Show loading state
-        analyzeBtn.disabled = true;
-        analyzeBtn.textContent = 'Analyzing...';
-        
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('file', audioFile.files[0]);
-        
-        try {
-            // Send to our endpoint
-            const response = await fetch('/analyze', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Error: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            
-            // Display results
-            resultsContent.innerHTML = `
-                <div class="result-item">
-                    <h4>Spectrogram</h4>
-                    <img src="${result.spectrogram}" alt="Spectrogram" class="spectrogram-img">
-                </div>
-                <div class="result-item">
-                    <h4>Prediction</h4>
-                    <p class="prediction">${result.prediction}</p>
-                </div>
-                <div class="result-item">
-                    <h4>Confidence</h4>
-                    <p class="confidence">${result.confidence}</p>
-                </div>
-            `;
-            
-            resultsContent.style.display = 'block';
-            
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred during analysis. Please try again.');
-        } finally {
-            // Reset button
-            analyzeBtn.disabled = false;
-            analyzeBtn.textContent = 'Analyze Audio';
-        }
-    });
-    """)
 
 
 def create_styles():
@@ -236,14 +156,10 @@ def create_styles():
     """)
 
 
-@rt("/")
-def get():
-    return Titled("SonicSight - Audio Classifier", create_ui(), create_client_scripts(), create_styles())
-
-
 async def process_audio_file(file):
     # Save to temporary file
     # Doing this because `handle_file` from Gradio expects a filepath or a URL as input
+    print("file:", file)
     file_extension = os.path.splitext(file.filename)[1]
     with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
         temp_file.write(await file.read())
@@ -273,15 +189,31 @@ async def process_audio_file(file):
         os.unlink(temp_path)
 
 
+@rt("/")
+def get():
+    return Titled("SonicSight - Audio Classifier", create_ui(), create_styles())
+
+
 @rt("/analyze")
 async def post(request):
     try:
         # Get uploaded file
         form = await request.form()
-        file = form.get("file")
+        file = form.get("audio")
 
-        # Process the file
-        return await process_audio_file(file)
+        if file is None:
+            print("form data", form)
+            raise FileNotFoundError("Audio file not found")
+
+        results = await process_audio_file(file)
+
+        return AudioAnalysisResult(
+            spectrogram=results["spectrogram"],
+            prediction=results["prediction"],
+            confidence=results["confidence"],
+            error=None,
+        )
+
     except Exception as e:
         # Handle errors
         print(f"Error processing audio: {str(e)}")
