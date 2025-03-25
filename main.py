@@ -15,63 +15,6 @@ hf_token = os.getenv("HF_TOKEN")
 app, rt = fast_app()
 
 
-@dataclass
-class AudioAnalysisResult:
-    spectrogram: str
-    prediction: str
-    confidence: float
-    error: str | None
-
-    def __ft__(self):
-        if self.error is not None:
-            return Div(self.error)
-
-        return Div(
-            Div(H4("Spectrogram:"), Img(src=self.spectrogram)),
-            Div(P(f"{self.prediction}"), P(f"{self.confidence}")),
-            Script("document.getElementById('results-content').style.display = 'block';"),
-        )
-
-
-def create_ui():
-    return Div(
-        create_upload_form(),
-        create_preview_section(),
-        create_results_section(),
-        id="upload-container",
-    )
-
-
-def create_upload_form():
-    return Form(
-        H3("Upload an Audio File", id="upload-audio-title"),
-        P("Select a .wav or .mp3 file to classify. You can play it before processing."),
-        Input(type="file", id="audio-file", name="audio", accept="audio/*"),
-        Button("Analyze Audio", id="analyze-btn", type="submit"),
-        hx_post="/analyze",
-        hx_target="#results-content",
-        hex_encoding="multipart/form-data",
-        cls="audio-form",
-    )
-
-
-def create_preview_section():
-    return Div(
-        H3("Audio Preview", id="audio-preview-title"),
-        P("Your audio will appear here after uploading", id="no-audio"),
-        Div(id="audio-preview", style="display:none;"),
-        cls="preview-container",
-    )
-
-
-def create_results_section():
-    return Div(
-        H3("Analysis Results", id="results-title"),
-        Div(id="results-content", style="display:none;"),
-        cls="results-container",
-    )
-
-
 def create_styles():
     return Style("""
     :root {
@@ -119,41 +62,124 @@ def create_styles():
     #analyze-btn {
         background-color: var(--blue)
     }
+    #app-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        height: 100vh;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    #left-column {
+        overflow-y: auto;
+    }
+    #right-column {
+        overflow-y: auto;
+    }
     body {
         font-family: 'Inter', system-ui, sans-serif;
         color: var(--fg0);
         line-height: 1.6;
     }
-    .audio-form, .preview-container, .results-container {
+    p {
+        color: var(--fg0);
+    }
+    audio {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .basic-container {
         margin: 20px 0;
         padding: 15px;
         border: 1px solid #ddd;
         border-radius: 4px;
         background-color: var(--card-bg);
     }
-    audio {
-        width: 100%;
-        margin-bottom: 10px;
+    .data-containers {
+        margin: 10px
     }
-    .button-container {
-        margin: 20px 0;
+    .data-headings {
+        color: var(--yellow)
     }
-    .result-item {
-        margin-bottom: 15px;
+    .error-message {
+        color: var(--red);
+        border-radies: 4px;
+        margin: 10px 0;
     }
     .spectrogram-img {
         max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        width: auto;
+        height: auto;
         border-radius: 4px;
+        display: block;
+        margin: 0 auto;
     }
     @media (max-width: 768px) {
-        .greeks-grid {
-            grid-template-columns: repeat(2, 1fr);
+        .spectrogram-img {
+            max-height: 300px;
         }
-        .column {
-            margin-bottom: 1rem;
+        #app-container {
+            grid-template-columns: 1fr;
+            height: auto;
+            overflow: visible;
+        }
+    }
+    @media (max-width: 480px) {
+        .spectrogram-img {
+            max-height: 200px;
         }
     }
     """)
+
+
+def create_ui():
+    return Div(
+        Div(create_upload_form(), create_preview_section(), id="left-column"),
+        Div(create_results_section(), id="right-column"),
+        id="app-container",
+    )
+
+
+def create_upload_form():
+    return Form(
+        H3("Upload an Audio File", id="upload-audio-title"),
+        P("Select a .wav or .mp3 file to classify. You can play it before processing."),
+        Input(
+            hx_post="/upload",
+            hx_target="#audio-player-container",
+            hx_swap="innerHTML",
+            type="file",
+            id="audio-file",
+            name="audio",
+            accept="audio/*",
+        ),
+        Button("Analyze Audio", id="analyze-btn", type="submit"),
+        hx_post="/analyze",
+        hx_encoding="multipart/form-data",
+        hx_target="#results-container",
+        hx_swap="innerHTML",
+        cls="basic-container",
+    )
+
+
+def create_preview_section():
+    return Div(
+        H3("Audio Preview", id="audio-preview-title"),
+        P("Your audio will appear here after uploading", id="no-audio"),
+        Div(id="audio-player-container"),
+        cls="basic-container",
+    )
+
+
+def create_results_section():
+    return Div(
+        H3("Analysis Results", id="results-title"),
+        Div(id="audio-player-container"),
+        Div(id="results-container"),
+        cls="basic-container",
+    )
 
 
 async def process_audio_file(file):
@@ -194,8 +220,63 @@ def get():
     return Titled("SonicSight - Audio Classifier", create_ui(), create_styles())
 
 
+@rt("/upload")
+async def upload(request):
+    try:
+        form = await request.form()
+        audio_file = form.get("audio")
+
+        if audio_file is None or not audio_file.filename:
+            return "No file selected"
+
+        mime_type = audio_file.content_type
+        if not mime_type.startswith("audio/"):
+            return Div("Error: Please upload an audio file (.mp3, .wav, etc.)", cls="error-message")
+
+        audio_element = Audio(
+            controls=True,
+            autoplay=False,
+        )
+
+        # If file sizes get larger, we might not be able to base64 encode
+        content = await audio_file.read()
+        b64_content = base64.b64encode(content).decode("utf-8")
+        data_url = f"data:{mime_type};base64,{b64_content}"
+
+        audio_element.src = data_url
+
+        return Div(P(f"{audio_file.filename}"), audio_element)
+    except Exception as e:
+        print(f"Error processing audio for preview: {str(e)}")
+        return f"Error: {str(e)}"
+
+
+@dataclass
+class AudioAnalysisResult:
+    spectrogram: str
+    prediction: str
+    confidence: float
+    error: str | None
+
+    def __ft__(self):
+        if self.error is not None:
+            return Div(self.error)
+
+        container = Div(id="audio-player-container")
+        results = Div(
+            Div(
+                H4("Spectrogram:", cls="data-headings"),
+                Img(src=self.spectrogram, cls="spectrogram-img", alt="Audio Spectrogram"),
+                cls="data-containers",
+            ),
+            Div(H4("Prediction:", cls="data-headings"), P(f"{self.prediction}"), cls="data-containers"),
+            Div(H4("Confidence:", cls="data-headings"), P(f"{self.confidence}"), cls="data-containers"),
+        )
+        return container(results)
+
+
 @rt("/analyze")
-async def post(request):
+async def analyze(request):
     try:
         # Get uploaded file
         form = await request.form()
@@ -206,12 +287,15 @@ async def post(request):
             raise FileNotFoundError("Audio file not found")
 
         results = await process_audio_file(file)
+        container = Div(id="results-container")
 
-        return AudioAnalysisResult(
-            spectrogram=results["spectrogram"],
-            prediction=results["prediction"],
-            confidence=results["confidence"],
-            error=None,
+        return container(
+            AudioAnalysisResult(
+                spectrogram=results["spectrogram"],
+                prediction=results["prediction"],
+                confidence=results["confidence"],
+                error=None,
+            )
         )
 
     except Exception as e:
