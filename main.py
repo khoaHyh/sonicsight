@@ -11,6 +11,7 @@ from gradio_client import Client, handle_file
 # Load environment variables
 load_dotenv()
 hf_token = os.getenv("HF_TOKEN")
+port = os.getenv("PORT")
 
 app, rt = fast_app()
 
@@ -305,4 +306,4 @@ async def analyze(request):
 
 
 # Start the application
-serve()
+serve(port)
