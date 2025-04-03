@@ -306,4 +306,4 @@ async def analyze(request):
 
 
 # Start the application
-serve(port)
+serve(port, reload=False)
