@@ -13,6 +13,9 @@ load_dotenv()
 hf_token = os.getenv("HF_TOKEN")
 port = os.getenv("PORT")
 
+if port is not None:
+    port = int(port)
+
 app, rt = fast_app()
 
 
@@ -306,4 +309,4 @@ async def analyze(request):
 
 
 # Start the application
-serve(port, reload=False)
+serve(port=port, reload=False)
