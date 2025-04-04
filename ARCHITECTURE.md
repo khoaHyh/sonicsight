@@ -62,20 +62,20 @@ flowchart TB
 
 ### Frontend Stack
 
-• Raspberry Pi: Acts as home server hosting the application
-• Piku: A lightweight Platform-as-a-Service (PaaS) running on Raspberry Pi
-• NGINX: Web server that handles HTTP requests and serves content
-• FastHTML: Python frontend application/framework
+- Raspberry Pi: Acts as home server hosting the application
+- Piku: A lightweight Platform-as-a-Service (PaaS) running on Raspberry Pi
+- NGINX: Web server that handles HTTP requests and serves content
+- FastHTML: Python frontend application/framework
 
 ### Network & Connectivity
 
-• Cloudflare Tunnels: Securely exposes server to the internet without opening firewall ports
+- Cloudflare Tunnels: Securely exposes server to the internet without opening firewall ports
 
 ### Backend & AI (Cloud)
 
-• Hugging Face: Hosts ML model for inference
-• Gradio Client API: Provides the interface between frontend and the model
-• Kaggle: Where I initially trained the model before deployment
+- Hugging Face: Hosts ML model for inference
+- Gradio Client API: Provides the interface between frontend and the model
+- Kaggle: Where I initially trained the model before deployment
 
 ## Roadmap
 
