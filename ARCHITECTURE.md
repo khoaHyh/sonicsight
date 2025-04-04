@@ -9,13 +9,73 @@ This document is a brainstorm 🧠⛈️ on system design and the systematic app
 
 ## Components
 
-**Frontend**: FastHTML 🏎️! Since we're doing the course via fast.ai platform, I figured it was worth giving the Python web framework a try.
-**Backend**: Hugging Face Spaces 🤗 + Gradio is hosting our backend. This combination provides:
+```mermaid
+flowchart TB
+    subgraph "Frontend Network"
+        subgraph "Raspberry Pi"
+            subgraph "Piku PaaS"
+                FastHTML["FastHTML Frontend"]
+                NGINX["NGINX Server"]
+            end
+        end
+    end
 
-- free 🤑 way to host the data pre-processing and inference logic backend. The Gradio template provides a API so we can use any frontend layer to communicate with it.
-- its an easy, almost instant, way to test changes to the model
+    subgraph "Cloudflare"
+        CloudflareTunnel["Cloudflare Tunnel"]
+    end
 
-**Hosting**: Going to self-host coolify and use cloudflare tunnels to serve the website. Also going to run the web server as a daemonized service.
+    subgraph "Internet"
+        User["Internet User"]
+    end
+
+    subgraph "Hugging Face"
+        GradioAPI["Gradio API"]
+        subgraph "Inference"
+            AIModel["Trained Model"]
+        end
+    end
+
+    subgraph "Kaggle"
+        KaggleServers["Training Servers"]
+    end
+
+    %% Connections for normal operation
+    User -->|"Access Website"| CloudflareTunnel
+    CloudflareTunnel -->|"Secure Tunnel"| NGINX
+    %% Connection removed as Piku is inside Raspberry Pi
+    NGINX -->|"Serve"| FastHTML
+    FastHTML -->|"API Calls"| GradioAPI
+    GradioAPI -->|"Inference"| AIModel
+
+    %% Training relationship
+    KaggleServers -->|"Trained & Exported"| AIModel
+
+    %% Styling
+    classDef homeNet fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef cloud fill:#f0f8ff,stroke:#333,stroke-width:1px;
+    classDef platformService fill:#e6ffe6,stroke:#333,stroke-width:1px;
+
+    class User,Internet cloud;
+    class RaspPi,Piku,FastHTML,NGINX homeNet;
+    class CloudflareTunnel,GradioAPI,AIModel,KaggleServers platformService;
+```
+
+### Frontend Stack
+
+• Raspberry Pi: Acts as home server hosting the application
+• Piku: A lightweight Platform-as-a-Service (PaaS) running on Raspberry Pi
+• NGINX: Web server that handles HTTP requests and serves content
+• FastHTML: Python frontend application/framework
+
+### Network & Connectivity
+
+• Cloudflare Tunnels: Securely exposes server to the internet without opening firewall ports
+
+### Backend & AI (Cloud)
+
+• Hugging Face: Hosts ML model for inference
+• Gradio Client API: Provides the interface between frontend and the model
+• Kaggle: Where I initially trained the model before deployment
 
 ## Roadmap
 
