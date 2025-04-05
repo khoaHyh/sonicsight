@@ -200,7 +200,12 @@ async def process_audio_file(file):
         result = client.predict(file=handle_file(temp_path), api_name="/predict_audio")
         print("Result from server:", result)
 
-        spectrogram_base64, prediction, confidence = result[0], result[1], result[2]
+        (
+            _,
+            prediction,
+            confidence,
+            spectrogram_base64,
+        ) = result
 
         spectrogram_url = f"data:image/png;base64,{spectrogram_base64}"
 
