@@ -200,18 +200,9 @@ async def process_audio_file(file):
         result = client.predict(file=handle_file(temp_path), api_name="/predict_audio")
         print("Result from server:", result)
 
-        spectrogram_path, prediction, confidence = result[0], result[1], result[2]
+        spectrogram_base64, prediction, confidence = result[0], result[1], result[2]
 
-        # Verify spectrogram path exists
-        if not os.path.exists(spectrogram_path):
-            raise FileNotFoundError(f"Spectrogram file not found at {spectrogram_path}")
-
-        # Convert image to base64
-        img = Image.open(spectrogram_path)
-        buffered = io.BytesIO()
-        img.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        spectrogram_url = f"data:image/png;base64,{img_str}"
+        spectrogram_url = f"data:image/png;base64,{spectrogram_base64}"
 
         return {"spectrogram": spectrogram_url, "prediction": prediction, "confidence": confidence}
     finally:
