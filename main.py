@@ -189,7 +189,6 @@ def create_results_section():
 async def process_audio_file(file):
     # Save to temporary file
     # Doing this because `handle_file` from Gradio expects a filepath or a URL as input
-    print("file:", file)
     file_extension = os.path.splitext(file.filename)[1]
     with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
         temp_file.write(await file.read())
@@ -199,6 +198,7 @@ async def process_audio_file(file):
         # Call the Gradio API
         client = Client("khoaHyh/cat-meow-vs-dog-bork", hf_token=hf_token)
         result = client.predict(file=handle_file(temp_path), api_name="/predict_audio")
+        print("Result from server:", result)
 
         spectrogram_path, prediction, confidence = result[0], result[1], result[2]
 
@@ -216,7 +216,8 @@ async def process_audio_file(file):
         return {"spectrogram": spectrogram_url, "prediction": prediction, "confidence": confidence}
     finally:
         # Clean up the temporary file
-        os.unlink(temp_path)
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
 
 
 @rt("/")
@@ -251,7 +252,6 @@ async def upload(request):
 
         return Div(P(f"{audio_file.filename}"), audio_element)
     except Exception as e:
-        print(f"Error processing audio for preview: {str(e)}")
         return f"Error: {str(e)}"
 
 
@@ -287,7 +287,6 @@ async def analyze(request):
         file = form.get("audio")
 
         if file is None:
-            print("form data", form)
             raise FileNotFoundError("Audio file not found")
 
         results = await process_audio_file(file)
@@ -304,7 +303,6 @@ async def analyze(request):
 
     except Exception as e:
         # Handle errors
-        print(f"Error processing audio: {str(e)}")
         return {"error": f"Failed to process audio: {str(e)}"}
 
 
