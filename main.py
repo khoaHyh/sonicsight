@@ -80,6 +80,9 @@ def create_styles():
     #right-column {
         overflow-y: auto;
     }
+    #note {
+        font-weight: bold;
+    }
     body {
         font-family: 'Inter', system-ui, sans-serif;
         color: var(--fg0);
@@ -150,6 +153,7 @@ def create_upload_form():
     return Form(
         H3("Upload an Audio File", id="upload-audio-title"),
         P("Select a .wav or .mp3 file to classify. You can play it before processing."),
+        P("Note: we are only able to classify cat 🐱 vs dog 🐶 sounds.", id="note"),
         Input(
             hx_post="/upload",
             hx_target="#audio-player-container",
