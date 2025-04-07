@@ -13,6 +13,8 @@ load_dotenv()
 hf_token = os.getenv("HF_TOKEN")
 port = os.getenv("PORT")
 
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
 if port is not None:
     port = int(port)
 
@@ -240,6 +242,11 @@ async def upload(request):
         mime_type = audio_file.content_type
         if not mime_type.startswith("audio/"):
             return Div("Error: Please upload an audio file (.mp3, .wav, etc.)", cls="error-message")
+
+        if audio_file.size > MAX_FILE_SIZE:
+            return Div("Error: File size exceeds the maximum allowed size (10MB)", cls="error-message")
+
+        # TODO: check audio file signatures
 
         audio_element = Audio(
             controls=True,
