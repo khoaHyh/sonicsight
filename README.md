@@ -1,6 +1,6 @@
 # SonicSight
 
-Takes simple audio files, generates a spectrogram and uses an image classification model to identify the sound. Created this web application to display the model I trained, applying lessons 1 & 2 of the [fast.ai course](https://course.fast.ai). Currently, the model is trained to only recognized dog & cat sounds.
+Takes simple audio files, generates a spectrogram and uses an image classification model to identify the sound. Created this web application to display the model I trained, applying lessons 1 & 2 of the [fast.ai course](https://course.fast.ai). Currently, the model is trained to only recognized spectrograms of dog & cat sounds.
 
 ![Screenshot of Sonicsight web app](https://raw.githubusercontent.com/khoaHyh/portfolio-v3/refs/heads/main/public/sonicsight.png)
 
