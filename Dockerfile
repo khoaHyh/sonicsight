@@ -21,7 +21,7 @@ RUN chown -R app:app /app
 
 USER app
 
-EXPOSE 5000
+EXPOSE 3000
 
 # Start the application
 CMD ["python", "main.py"]
