@@ -11,7 +11,7 @@ from gradio_client import Client, handle_file
 # Load environment variables
 load_dotenv()
 hf_token = os.getenv("HF_TOKEN")
-port = os.getenv("PORT")
+port = os.getenv("PORT", "3000")
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
@@ -316,5 +316,5 @@ async def analyze(request):
         return {"error": f"Failed to process audio: {str(e)}"}
 
 
-# Start the application
-serve(port=port, reload=False)
+if __name__ == "__main__":
+    serve(port=port, host="0.0.0.0", reload=False)
